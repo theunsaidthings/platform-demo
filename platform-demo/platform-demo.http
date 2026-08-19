@@ -1,0 +1,6 @@
+@platform_demo_HostAddress = http://localhost:5090
+
+GET {{platform_demo_HostAddress}}/Items/
+Accept: application/json
+
+###
