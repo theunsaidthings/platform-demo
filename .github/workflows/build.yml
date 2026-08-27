@@ -1,0 +1,22 @@
+name: Build Docker Image
+
+# Cost-Safe Rule: Manual trigger only. No automatic runs on push yet.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # GitHub provides this Linux runner for free
+    
+    steps:
+      # Step 1: The absolute first thing GitHub Actions must do (as we discussed!)
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Verify we are in the right place
+      - name: List files
+        run: ls -la
+
+      # Step 3: Build the Docker image (using the ./app folder where your Dockerfile lives)
+      - name: Build Docker image
+        run: docker build -t platform-demo-api ./app
