@@ -1,27 +1,32 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-#Depending on the operating system of the host machines(s) that will build or run the containers, the image specified in the FROM statement may need to be changed.
-#For more information, please see https://aka.ms/containercompat
-
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-nanoserver-1809 AS base
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-FROM mcr.microsoft.com/dotnet/sdk:8.0-nanoserver-1809 AS build
-ARG BUILD_CONFIGURATION=Release
+# Stage 1: Build the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["platform-demo/platform-demo.csproj", "platform-demo/"]
-RUN dotnet restore "./platform-demo/platform-demo.csproj"
+
+# Copy project file and restore dependencies
+COPY ["*.csproj", "./"]
+RUN dotnet restore
+
+# Copy source code and build
 COPY . .
-WORKDIR "/src/platform-demo"
-RUN dotnet build "./platform-demo.csproj" -c %BUILD_CONFIGURATION% -o /app/build
+RUN dotnet build -c Release -o /app/build
 
+# Stage 2: Publish
 FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./platform-demo.csproj" -c %BUILD_CONFIGURATION% -o /app/publish /p:UseAppHost=false
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+# Stage 3: Final lightweight & secure runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled AS final
 WORKDIR /app
+
+# Copy the published files from the 'publish' stage
 COPY --from=publish /app/publish .
+
+# Configure the app to listen on port 8080
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+# Security: Switch to the built-in non-root user provided by Microsoft's .NET images
+USER $APP_UID
+
+# Start the application
 ENTRYPOINT ["dotnet", "platform-demo.dll"]
