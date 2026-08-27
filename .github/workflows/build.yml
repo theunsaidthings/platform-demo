@@ -19,4 +19,4 @@ jobs:
 
       # Step 3: Build the Docker image (using the ./app folder where your Dockerfile lives)
       - name: Build Docker image
-        run: docker build -t platform-demo-api ./platform-demo
+        run: docker build -t platform-demo-api ./app
