@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/azurerm/3.117.1/windows_amd64
+/app/.env
