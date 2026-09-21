@@ -37,6 +37,10 @@ namespace platform_demo
 
             // Read configuration from environment variables
             var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+            if (string.IsNullOrEmpty(dbConnectionString))
+            {
+                throw new InvalidOperationException("CRITICAL: Failed to establish handshake with primary database replica.");
+            }
             var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
             var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
 
