@@ -2,6 +2,8 @@
 using platform_demo.Services;
 using platform_demo.Utility;
 using PlatformDemo.Services;
+using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
 
 namespace platform_demo
 {
@@ -15,6 +17,19 @@ namespace platform_demo
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+
+            builder.Services.AddOpenTelemetry()
+            .WithTracing(tracerProviderBuilder =>
+            {
+                tracerProviderBuilder
+                    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("platform-api"))
+                    .AddAspNetCoreInstrumentation() // Automatically traces all incoming HTTP requests
+                    .AddOtlpExporter(opt =>
+                    {
+                        // This tells the app to send data to the Jaeger container on our Docker network
+                        opt.Endpoint = new Uri("http://platform-jaeger:4317");
+                    });
+            });
 
             builder.Services.AddControllers();
             builder.Services.AddSingleton<IItemStore, ItemStore>();
@@ -75,13 +90,13 @@ namespace platform_demo
 
             app.MapControllers();
 
-            // Try to use the PORT environment variable
-            var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? $"http://localhost:{port}";
-            app.Urls.Add(urls);
+            //// Try to use the PORT environment variable
+            //var urls = $"http://localhost:{port}";
+            //app.Urls.Add(urls);
 
-            Console.WriteLine($"Application started on: {urls}");
+            //Console.WriteLine($"Application started on: {urls}");
 
-            app.Run();
+            app.Run($"http://+:{port}");
         }
     }
 }

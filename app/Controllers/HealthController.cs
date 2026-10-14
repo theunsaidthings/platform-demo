@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
 using platform_demo.Utility;
 using System.Text.RegularExpressions;
 
@@ -30,7 +32,7 @@ namespace platform_demo.Controllers
 
             var healthStatus = new
             {
-                status = "Healthy",
+                status = "Healthy and Hot Reloading!!!",
                 timestamp = DateTime.UtcNow,
                 database = new
                 {
@@ -59,6 +61,24 @@ namespace platform_demo.Controllers
             
 
             return Ok(healthStatus);
+        }
+
+        [HttpGet("liveness")]
+        public IActionResult CheckLiveness()
+        {
+            return Ok(new { status = "Alive" });
+        }
+        
+        [HttpGet("readiness")]
+        public IActionResult CheckReadiness()
+        {
+            var dbConn = _configuration["DB_CONNECTION_STRING"];
+            if (string.IsNullOrEmpty(dbConn))
+            {
+                _logger.LogWarning("Readiness probe failed: Database connection string is missing.");
+                return StatusCode(503); // 503 Service Unavailable
+            }
+            return Ok(new { status = "Ready", databaseConfigured = true });
         }
 
         private static string? ExtractHost(string? connectionString)
